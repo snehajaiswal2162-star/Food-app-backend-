@@ -1,0 +1,39 @@
+const jwt = require('jsonwebtoken')
+
+const protect = (req, res, next) => {
+  const token = req.cookies.token
+
+  if (!token) {
+    return res.status(401).json({
+      message: 'Not authorized',
+      success: false
+    })
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    req.user = decoded
+    next()
+  } catch (error) {
+    return res.status(401).json({
+      message: 'Invalid token',
+      success: false
+    })
+  }
+}
+
+const adminOnly = (req, res, next) => {
+  if (req.user?.email === process.env.ADMIN_EMAIL) {
+    return next()
+  }
+
+  return res.status(403).json({
+    message: 'Admin access only',
+    success: false
+  })
+}
+
+module.exports = {
+  protect,
+  adminOnly
+}
